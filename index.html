@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+
+<script>
+/* جسر اللغة: lavndr-en.js يستعمل mkv2_lang وبقية صفحات المؤشر mkv2_lang */
+try{(function(){var q=new URLSearchParams(location.search).get('lang'),L=window.localStorage,v=(q==='en'||q==='ar')?q:(L.getItem('mkv2_lang')||L.getItem('mkv2_lang'));if(v==='en'||v==='ar'){L.setItem('mkv2_lang',v);L.setItem('mkv2_lang',v)}})()}catch(e){}
+const BACK="https://script.google.com/macros/s/AKfycbxE9aOlAGn-qev9BI0As2yzqLrUUoqGPJYVu-JvoUSDJiPFXdMllwvK-QX4LFRMYOc-TQ/exec";
+(function () {
+  try {
+    var L = window.localStorage, P = 'mkss:';
+    var W = { getItem: function (k) { return L.getItem(P + k); }, setItem: function (k, v) { L.setItem(P + k, String(v)); }, removeItem: function (k) { L.removeItem(P + k); },
+      clear: function () { Object.keys(L).filter(function (k) { return k.indexOf(P) === 0; }).forEach(function (k) { L.removeItem(k); }); },
+      key: function (i) { var a = Object.keys(L).filter(function (k) { return k.indexOf(P) === 0; }); return a[i] == null ? null : a[i].slice(P.length); },
+      get length() { return Object.keys(L).filter(function (k) { return k.indexOf(P) === 0; }).length; } };
+    L.getItem('x'); Object.defineProperty(window, 'sessionStorage', { configurable: true, get: function () { return W; } });
+  } catch (e) {}
+})();
+/* ══ مؤشر مستقل = نسخة لاڤندرز: هذه الطبقة تحوّل نداءات الـ Worker إلى خلفية هذا المؤشر فقط ══ */
+(function () {
+  var QS = new URLSearchParams(location.search), B = BACK;
+  try { if (B) localStorage.setItem('mkv2_b', B); else B = localStorage.getItem('mkv2_b') || ''; } catch (e) {}
+  window.MKB = B;
+  var SCH = (QS.get('sch') || '').trim(); try { if (/^[a-z][a-z0-9.]{3,80}$/.test(SCH)) localStorage.setItem('mkv2_sch', SCH); else SCH = localStorage.getItem('mkv2_sch') || ''; } catch (e) {}
+  var APP = QS.get('app') === '1';
+  var INAPP = false; try { INAPP = APP || /; wv\)|\bVersion\/4\.0\b.*Chrome/.test(navigator.userAgent) || matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; } catch (e) { INAPP = APP; }
+  var host = location.pathname.split('/').pop() || '', pre = /^market/.test(host);
+  window.MKP = pre ? { home: 'market.html', app: 'market-app.html', admin: 'market-admin.html', biz: 'market-business.html' } : { home: 'index.html', app: 'app.html', admin: 'admin.html', biz: 'business.html' };
+  /* تطبيق أندرويد قديم (قبل MktApp/2): نوافذ confirm/prompt مكتومة فتفشل الأزرار، فنقبل التأكيد تلقائياً بدل الفشل الصامت */
+  try { if (/; wv\)/.test(navigator.userAgent) && !/MktApp\/2/.test(navigator.userAgent)) { window.confirm = function () { return true; }; window.prompt = function (m, d) { return d == null ? '' : d; }; } } catch (e) {}
+  var realFetch = window.fetch.bind(window), CFG = null;
+  var hide = document.createElement('style'); hide.id = 'mkHide'; hide.textContent = 'html{visibility:hidden}'; document.documentElement.appendChild(hide);
+  var unhide = function () { var h = document.getElementById('mkHide'); if (h) h.remove(); }; setTimeout(unhide, 4000);
+  function note(t) { var go = function () { if (document.getElementById('mkNote')) return; var d = document.createElement('div'); d.id = 'mkNote'; d.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#7f1d1d;color:#fff;font:13px/1.7 sans-serif;padding:8px 14px;text-align:center'; d.textContent = t; document.body.appendChild(d); }; if (document.body) go(); else document.addEventListener('DOMContentLoaded', go); unhide(); }
+  var cacheName = ''; try { cacheName = localStorage.getItem('mkv2_name:' + B.slice(-20)) || ''; } catch (e) {}
+  window.MKT_CFG = (B ? realFetch(B + (B.indexOf('?') < 0 ? '?' : '&') + 'action=config').then(function (r) { return r.json(); }) : Promise.reject(new Error('no backend'))).then(function (c) {
+    if (!c || c.error || c.status === 'locked') { note(c && c.status === 'locked' ? 'انتهت التجربة وهذا المؤشر مقفل — تواصل مع صاحبه.' : 'تعذّر قراءة إعدادات المؤشر' + (c && c.error ? ': ' + c.error : '') + ' — حدّث الخلفية من أداة الإنشاء.'); return (CFG = c || {}); }
+    CFG = c; window.MKT_TIER = c.tier; window.MKT_WA = c.wa || ''; try { window.WHATSAPP_NUMBER = c.wa || ''; } catch (e) {} window.MKT_MID = c.mid; window.MKT_NAME = c.name; try { localStorage.setItem('mkv2_name:' + B.slice(-20), c.name || ''); } catch (e) {}
+    theme(c); brand(c.name); unhide(); return c;
+  }).catch(function () { note(B ? 'تعذّر الاتصال بخلفية المؤشر. تأكد أن النشر «أي شخص» وأن التحديث تم.' : 'رابط المؤشر ناقص: لا يوجد عنوان خلفية (b).'); return (CFG = {}); });
+  function theme(c) {
+    var d = 'https://lavndrs120.github.io/', m = d + 'bg-m.jpg', dk = d + 'bg-d.jpg', ac = '';
+    if (/^https:\/\/drive\.google\.com\/thumbnail\?id=[A-Za-z0-9_-]{10,80}&sz=w\d{3,4}$/.test(c.bizImage || '')) { m = dk = c.bizImage; }
+    if (/^#[0-9A-Fa-f]{6}$/.test(c.accent || '')) ac = c.accent;
+    var el = document.createElement('style'), css = '';
+    if (m !== d + 'bg-m.jpg') css += 'body::after{background:linear-gradient(rgba(6,6,12,.88) 0%,rgba(6,6,12,.62) 40%,rgba(6,6,12,.82) 100%),url("' + m + '") center/cover no-repeat !important}@media(min-width:900px){body::after{background:linear-gradient(rgba(6,6,12,.78),rgba(6,6,12,.70)),url("' + dk + '") center/cover no-repeat !important}}';
+    if (ac) { var r = parseInt(ac.slice(1, 3), 16), g = parseInt(ac.slice(3, 5), 16), b = parseInt(ac.slice(5, 7), 16); css += ':root{--gold:' + ac + ';--gold2:' + ac + ';--gold-dim:rgba(' + r + ',' + g + ',' + b + ',.15);--gold-glow:rgba(' + r + ',' + g + ',' + b + ',.3)}'; }
+    css += 'a[href="builder.html"],a[href="market-builder.html"]{display:none!important}';
+    el.textContent = css; document.documentElement.appendChild(el);
+  }
+  function brand(name) {
+    if (!name) return;
+    document.title = name;
+    var walk = function (root) {
+      var w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null), n, a = [];
+      while ((n = w.nextNode())) { var p = n.parentNode && n.parentNode.nodeName; if (p === 'SCRIPT' || p === 'STYLE') continue; if (n.nodeValue.indexOf('LAVNDR120') > -1) a.push(n); }
+      a.forEach(function (t) { t.nodeValue = t.nodeValue.split('LAVNDR120').join(name); });
+    };
+    var run = function () { try { walk(document.body); } catch (e) {} };
+    var go = function () { run(); var t = 0; new MutationObserver(function () { if (t) return; t = setTimeout(function () { t = 0; run(); }, 150); }).observe(document.body, { childList: true, subtree: true, characterData: true }); };
+    if (document.body) go(); else document.addEventListener('DOMContentLoaded', go);
+  }
+  /* الروابط: صفحات المؤشر الثلاث + صفحات لاڤندرز المعلوماتية (مطلقة) + إخفاء ما هو خارج نطاق المؤشر */
+  var INFO_ = ['about','faq','packages','press','privacy','lava','magma','vindex','oms','tycoon','franchise','reseller','businesses','golden-certificate','consumer-index','embed','app-builder'];
+  var PUB = 'https://lavndrs120.github.io/', OUT = /^(en\/)?(builder|market-builder|store|session-check)(\.html)?(\?|#|$)/;
+  function hideA(a) {
+    a.style.display = 'none';
+    if (a.getAttribute('data-hid')) return; a.setAttribute('data-hid', '1');
+    try {
+      var p = a.parentNode;
+      if (p && p.id === 'footLinks') {
+        var n = a.previousSibling;
+        if (n && n.nodeType === 3 && /^\s*·\s*$/.test(n.nodeValue)) n.nodeValue = '';
+        else { n = a.nextSibling; if (n && n.nodeType === 3 && /^\s*·\s*$/.test(n.nodeValue)) n.nodeValue = ''; }
+      }
+    } catch (e) {}
+  }
+  function fixLinks() {
+    document.querySelectorAll('a[href]').forEach(function (a) {
+      var h = a.getAttribute('href') || '';
+      if (!h || h.charAt(0) === '#' || /^(https?:|mailto:|tel:|javascript:|data:|blob:|intent:|whatsapp:|sms:)/i.test(h)) return;
+      var m = /^\.?\/?(dashboard|admin|index|market|market-app|market-admin|app|business|market-business|about|faq|packages|press|privacy|lava|magma|vindex|oms|tycoon|franchise|reseller|businesses|golden-certificate|consumer-index|embed|app-builder)\.html(\?[^#]*)?(#.*)?$/.exec(h), to = null;
+      if (!m && /^\.?\/?(\?[^#]*)?(#.*)?$/.test(h)) m = [h, 'index', (/^\.?\/?(\?[^#]*)?/.exec(h) || [])[1] || '', (/(#.*)$/.exec(h) || [])[1] || ''];
+      if (m && window.MKT_TIER === 'franchise' && (m[1] === 'franchise' || m[1] === 'tycoon')) { hideA(a); return; }
+      if (m) { var base = INFO_.indexOf(m[1]) >= 0 ? (pre ? 'market-' + m[1] + '.html' : m[1] + '.html') : { business: MKP.biz, 'market-business': MKP.biz, dashboard: MKP.app, 'market-app': MKP.app, app: MKP.app, admin: MKP.admin, 'market-admin': MKP.admin, index: MKP.home, market: MKP.home }[m[1]]; var q = m[2] || ''; if (B && pre && q.indexOf('b=') < 0) q += (q ? '&' : '?') + 'b=' + encodeURIComponent(B); to = base + q + (m[3] || ''); }
+      else if (OUT.test(h.replace(/^\.?\//, '')) || (window.MKT_TIER === 'franchise' && /^(franchise|tycoon)(\.html)?(\?|#|$)/.test(h.replace(/^\.?\//, '')))) { hideA(a); return; }
+      else if (!pre && /^(en\/|insights\/)/.test(h.replace(/^\.?\//, ''))) return;
+      else to = PUB + h.replace(/^\.?\//, '');
+      if (to !== h) a.setAttribute('href', to);
+    });
+  }
+  document.addEventListener('DOMContentLoaded', function () { fixLinks(); setInterval(fixLinks, 1200); });
+  function ok(o) { return new Response(JSON.stringify(o), { status: 200, headers: { 'Content-Type': 'application/json' } }); }
+  window.fetch = function (u, o) {
+    var url = String(u && u.url || u || '');
+    if (url.indexOf('workers.dev') < 0) return realFetch.apply(window, arguments);
+    var opt = Object.assign({}, o || {}), hd = Object.assign({}, opt.headers || {});
+    return window.MKT_CFG.then(function (c) {
+      if (!c || !c.k) return ok({ error: 'المؤشر غير جاهز', code: 503 });
+      var q = new URLSearchParams(url.split('?')[1] || ''), tok = q.get('token') || '', au = hd.Authorization || hd.authorization || '';
+      if (!tok && /^Bearer /.test(au)) tok = au.slice(7);
+      var body = null; try { body = opt.body ? JSON.parse(opt.body) : null; } catch (e) {}
+      if (body && !tok && body.token) tok = body.token;
+      var action = q.get('action') || (body && body.action) || '';
+      if (action === 'login' && body && body.idToken === 'mkcode' && window.__mkSess) { var s = window.__mkSess; window.__mkSess = null; return ok(s); }
+      q.set('key', c.k); if (tok) q.set('token', tok); else q.delete('token');
+      var target = B + (B.indexOf('?') < 0 ? '?' : '&') + q.toString();
+      var init = { method: opt.method || 'GET' };
+      if (init.method.toUpperCase() === 'POST') { init.method = 'POST'; init.headers = { 'Content-Type': 'text/plain;charset=utf-8' }; init.body = opt.body || '{}'; }
+      return realFetch(target, init);
+    });
+  };
+  /* تسجيل الدخول: Google (nonce المؤشر) أو رمز يصل للبريد (للتطبيق والمتصفحات المقيَّدة) */
+  window.MKT_wrapGSI = function (cfg) { cfg = cfg || {}; cfg.nonce = 'lvnmkt-' + (window.MKT_MID || ''); return cfg; };
+  function api(params) { return window.MKT_CFG.then(function (c) { var q = new URLSearchParams(Object.assign({ key: c.k }, params)); return realFetch(B + (B.indexOf('?') < 0 ? '?' : '&') + q.toString()).then(function (r) { return r.json(); }); }); }
+  var CODE = false, LEM = '', HSTO = 0;
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  window.MKT_loginUI = function () {
+    var wrap = document.getElementById('gsiButtonWrap'); if (!wrap) return;
+    var box = document.getElementById('mktLg');
+    if (!box) { box = document.createElement('div'); box.id = 'mktLg'; box.style.cssText = 'margin-top:14px;max-width:300px;text-align:center;font-family:sans-serif;color:#aaa'; wrap.insertAdjacentElement('afterend', box); }
+    var inp = 'width:100%;box-sizing:border-box;padding:13px;margin-bottom:10px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#fff;font-size:15px;text-align:center;outline:none',
+        btn = 'width:100%;padding:13px;border:none;border-radius:100px;background:linear-gradient(135deg,#F0D080,#C9A84C);color:#1a1230;font-weight:900;font-size:15px;cursor:pointer;margin-bottom:8px';
+    if (!CODE) {
+      if (INAPP) {
+        wrap.style.display = 'none';
+        var waiting = hsActive();
+        box.innerHTML = '<button id="mktG" style="' + btn + ';background:#fff;color:#222;display:flex;align-items:center;justify-content:center;gap:10px"><b style="color:#4285F4;font-size:18px">G</b> الدخول بحساب Google</button>' +
+          (waiting ? '<div style="font-size:12.5px;line-height:1.9;color:#C9A84C;margin:8px 0">أكمل الدخول في المتصفح ثم ارجع إلى التطبيق — ننتظرك…<br><a href="#" id="mktHsC" style="color:#aaa;font-size:11.5px">إلغاء</a></div>' : '') +
+          '<a href="#" id="mktToCode" style="color:#aaa;font-size:12px">أو ادخل برمز يصل لبريدك</a>';
+        document.getElementById('mktG').onclick = function () { startHs(); MKT_loginUI(); };
+        var hc = document.getElementById('mktHsC'); if (hc) hc.onclick = function (e) { e.preventDefault(); hsClear(); MKT_loginUI(); };
+        document.getElementById('mktToCode').onclick = function (e) { e.preventDefault(); CODE = true; MKT_loginUI(); };
+        return;
+      }
+      wrap.style.display = 'block'; box.innerHTML = '<a href="#" id="mktToCode" style="color:#C9A84C;font-size:12px">لا يعمل زر Google؟ ادخل برمز على بريدك</a>'; document.getElementById('mktToCode').onclick = function (e) { e.preventDefault(); CODE = true; MKT_loginUI(); }; return; }
+    wrap.style.display = 'none';
+    if (LEM) {
+      box.innerHTML = '<div style="font-size:13px;line-height:1.8;margin-bottom:12px">أرسلنا رمزاً من 6 أرقام إلى<br><b dir="ltr" style="color:#fff">' + esc(LEM) + '</b></div><input id="mktK" inputmode="numeric" maxlength="6" placeholder="000000" style="' + inp + ';letter-spacing:8px;font-size:20px"><button id="mktV" style="' + btn + '">تأكيد</button><div id="mktM" style="font-size:12px;min-height:18px;color:#f88"></div><a href="#" id="mktRe" style="color:#C9A84C;font-size:12px">إعادة الإرسال</a> · <a href="#" id="mktCh" style="color:#C9A84C;font-size:12px">تغيير البريد</a>';
+      document.getElementById('mktV').onclick = verify;
+      document.getElementById('mktRe').onclick = function (e) { e.preventDefault(); send(LEM); };
+      document.getElementById('mktCh').onclick = function (e) { e.preventDefault(); LEM = ''; MKT_loginUI(); };
+    } else {
+      box.innerHTML = '<div style="font-size:13px;margin-bottom:10px">اكتب بريدك لنرسل لك رمز دخول</div><input id="mktE" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com" style="' + inp + '"><button id="mktS" style="' + btn + '">إرسال الرمز</button><div id="mktM" style="font-size:12px;min-height:18px;color:#f88"></div>' + '<a href="#" id="mktBackG" style="color:#C9A84C;font-size:12px">العودة لـ Google</a>';
+      document.getElementById('mktS').onclick = function () { var em = (document.getElementById('mktE').value || '').trim().toLowerCase(); if (!em) { document.getElementById('mktM').textContent = 'اكتب بريدك'; return; } send(em); };
+      var bg = document.getElementById('mktBackG'); if (bg) bg.onclick = function (e) { e.preventDefault(); CODE = false; MKT_loginUI(); };
+    }
+    var lm = document.getElementById('loginMsg'); if (lm && /Google/.test(lm.textContent)) lm.textContent = 'سجّل دخولك للمتابعة';
+  };
+  function send(em) { var m = document.getElementById('mktM'); if (m) m.textContent = 'جارٍ الإرسال…'; api({ action: 'code_send', email: em }).then(function (r) { if (r && r.status === 'sent') { LEM = em; MKT_loginUI(); } else if (m) m.textContent = (r && r.error) || 'تعذّر الإرسال'; }).catch(function () { if (m) m.textContent = 'تعذّر الاتصال'; }); }
+  function verify() {
+    var c = (document.getElementById('mktK').value || '').trim(), m = document.getElementById('mktM');
+    if (!/^\d{6}$/.test(c)) { m.textContent = 'اكتب الرمز المكوّن من 6 أرقام'; return; }
+    m.textContent = 'جارٍ التحقق…';
+    api({ action: 'code_verify', email: LEM, code: c }).then(function (r) {
+      if (!(r && r.token)) { m.textContent = (r && r.error) || 'تعذّر الدخول'; return; }
+      LEM = ''; window.__mkSess = r; if (typeof handleCredentialResponse === 'function') handleCredentialResponse({ credential: 'mkcode' });
+    }).catch(function () { m.textContent = 'تعذّر الاتصال'; });
+  }
+  /* دخول Google في التطبيق: صفحة دخول في المتصفح الخارجي + استلام الجلسة بمعرّف سري (لا حاجة لرجوع آلي) */
+  function hsActive() { try { var v = (localStorage.getItem('mkv2_hs') || '').split(':'); return v[0] && Date.now() - Number(v[1]) < 300000 ? v[0] : ''; } catch (e) { return ''; } }
+  function hsClear() { try { localStorage.removeItem('mkv2_hs'); } catch (e) {} clearTimeout(HSTO); }
+  function rnd() { var a = new Uint8Array(16); (window.crypto || window.msCrypto).getRandomValues(a); return Array.prototype.map.call(a, function (x) { return ('0' + x.toString(16)).slice(-2); }).join(''); }
+  function startHs() {
+    var id = rnd(); try { localStorage.setItem('mkv2_hs', id + ':' + Date.now()); } catch (e) {}
+    var u = 'https://lavndrs120.github.io/market-login.html?b=' + encodeURIComponent(B) + '&hs=' + id + (/^[a-z][a-z0-9.]{3,80}$/.test(SCH) ? '&sch=' + SCH : '');
+    try { if (window.LavndrMkt && typeof LavndrMkt.open === 'function') LavndrMkt.open(u); else window.open(u, '_blank'); } catch (e) { window.open(u, '_blank'); }
+    pollHs();
+  }
+  function pollHs() {
+    clearTimeout(HSTO); var id = hsActive(); if (!id) return;
+    api({ action: 'hs_poll', id: id }).then(function (r) {
+      if (r && r.token) { hsClear(); window.__mkSess = r; if (typeof handleCredentialResponse === 'function') handleCredentialResponse({ credential: 'mkcode' }); return; }
+      HSTO = setTimeout(pollHs, 2000);
+    }).catch(function () { HSTO = setTimeout(pollHs, 4000); });
+  }
+  document.addEventListener('visibilitychange', function () { if (!document.hidden && hsActive()) pollHs(); });
+  document.addEventListener('DOMContentLoaded', function () { if (hsActive()) pollHs(); });
+  /* تسجيل جهاز الإشعارات داخل التطبيق */
+  (function () {
+    if (!window.LavndrMkt || typeof LavndrMkt.fcm !== 'function') return;
+    var tries = 0;
+    (function go() {
+      tries++; var t = '', s = ''; try { t = String(LavndrMkt.fcm() || ''); s = sessionStorage.getItem('mkv2_token') || ''; } catch (e) {}
+      if (t && s) { var key = 'mkv2_pushreg'; try { if (localStorage.getItem(key) === s.slice(-24) + t.slice(-24)) return; } catch (e) {}
+        fetch('https://lavndr.omssolutionorders.workers.dev?action=register_device', { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8', Authorization: 'Bearer ' + s }, body: JSON.stringify({ action: 'register_device', fcmToken: t }) }).then(function (r) { return r.json(); }).then(function (r) { if (r && !r.error) { try { localStorage.setItem(key, s.slice(-24) + t.slice(-24)); } catch (e) {} } }).catch(function () {});
+        return; }
+      if (tries < 40) setTimeout(go, 3000);
+    })();
+  })();
+})();
+
+/* طبقة بلا إنترنت (مأخوذة من lavndr-app.js في لاڤندرز دون زر تحميل تطبيق لاڤندرز): رسالة واضحة عند انقطاع الاتصال + تحديث عند عودته */
+(function () {
+  var MSG = 'لا يوجد اتصال بالإنترنت — تعذّر تنفيذ هذا الإجراء. جرّب مرة أخرى عند عودة الاتصال.';
+  var rf = window.fetch ? window.fetch.bind(window) : null, bar, bt;
+  function isApi(u) { return /workers\.dev|script\.google\.com/.test(String(u || '')); }
+  function offResp() { return new Response(JSON.stringify({ error: MSG, offline: true, code: 0 }), { status: 200, headers: { 'Content-Type': 'application/json' } }); }
+  function showBar(t, kind, ms) {
+    try {
+      if (!bar) { bar = document.createElement('div'); bar.setAttribute('role', 'status'); bar.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:2147483000;max-width:92vw;padding:9px 16px;border-radius:100px;font:600 12.5px/1.5 system-ui,Tahoma,sans-serif;color:#fff;box-shadow:0 6px 24px rgba(0,0,0,.45);display:none;text-align:center;direction:rtl'; (document.body || document.documentElement).appendChild(bar); }
+      bar.textContent = t; bar.style.background = kind === 'ok' ? 'rgba(16,185,129,.95)' : (kind === 'warn' ? 'rgba(180,83,9,.96)' : 'rgba(60,60,70,.96)'); bar.style.display = 'block';
+      clearTimeout(bt); if (ms) bt = setTimeout(function () { bar.style.display = 'none'; }, ms);
+    } catch (e) {}
+  }
+  if (rf) {
+    window.fetch = function (input, init) {
+      var url = typeof input === 'string' ? input : (input && input.url) || '', method = String((init && init.method) || (input && input.method) || 'GET').toUpperCase();
+      if (isApi(url) && method !== 'GET' && navigator.onLine === false) { showBar(MSG, 'warn', 4000); return Promise.resolve(offResp()); }
+      return rf(input, init).catch(function (err) { if (isApi(url) && method !== 'GET') { showBar(MSG, 'warn', 4000); return offResp(); } throw err; });
+    };
+  }
+  window.addEventListener('offline', function () { showBar('📴 أنت غير متصل — الإجراءات تحتاج اتصالاً.', 'info', 0); });
+  window.addEventListener('online', function () {
+    showBar('✓ عاد الاتصال — جارٍ تحديث البيانات', 'ok', 2500);
+    try { window.dispatchEvent(new Event('lavndr-online')); } catch (e) {}
+    try { if (typeof window.loadData === 'function' && window.AUTH_TOKEN !== undefined) window.loadData(); } catch (e) {}
+  });
+  document.addEventListener('DOMContentLoaded', function () { if (navigator.onLine === false) showBar('📴 أنت غير متصل — الإجراءات تحتاج اتصالاً.', 'info', 0); });
+})();
+
+/* زر «حمّل التطبيق» / «حمّل التحديث» — نفس نظام لاڤندرز: يظهر عند وجود app-version.json في ريبو المالك (بعد نقل التطبيق إلى GitHub) */
+(function () {
+  var UA = navigator.userAgent || '', mm = UA.match(/MktApp\/2(?:\/(\d+))?/);
+  var IN_APP = !!mm, APP_CODE = mm && mm[1] ? parseInt(mm[1], 10) : 0, IS_IOS = /iPhone|iPad|iPod/i.test(UA);
+  var row, btn, latest = null;
+  var SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M17.6 9.48l1.84-3.18a.38.38 0 0 0-.14-.52.38.38 0 0 0-.52.14l-1.87 3.24A11.4 11.4 0 0 0 12 8.2c-1.7 0-3.3.38-4.9 1l-1.88-3.24a.38.38 0 0 0-.52-.14.38.38 0 0 0-.14.52l1.84 3.18C3.3 11.28 1.3 14.3 1 17.8h22c-.3-3.5-2.3-6.52-5.4-8.32zM7 15.3a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm10 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/></svg>';
+  function css() {
+    if (document.getElementById('mktAppCss')) return;
+    var st = document.createElement('style'); st.id = 'mktAppCss';
+    st.textContent = '@keyframes lvPulse{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.65);transform:scale(1)}50%{box-shadow:0 0 0 9px rgba(16,185,129,0);transform:scale(1.06)}}#mktAppBtn{display:inline-flex;align-items:center;gap:6px;border:none;cursor:pointer;color:#fff;font:700 12px/1 system-ui,Tahoma,sans-serif;padding:8px 13px;border-radius:100px;background:linear-gradient(135deg,#10B981,#059669);box-shadow:0 2px 10px rgba(16,185,129,.35);white-space:nowrap}#mktAppBtn.upd{animation:lvPulse 1.4s ease-in-out infinite;background:linear-gradient(135deg,#34D399,#10B981)}';
+    document.head.appendChild(st);
+  }
+  function build() {
+    if (row) return; css();
+    row = document.createElement('div'); row.id = 'mktAppRow';
+    row.style.cssText = 'direction:ltr;display:none;margin:8px auto 0;padding:0 10px;box-sizing:border-box;position:relative;z-index:5';
+    btn = document.createElement('button'); btn.id = 'mktAppBtn'; btn.type = 'button';
+    btn.onclick = function () { if (latest && latest.apkUrl) location.href = latest.apkUrl; };
+    row.appendChild(btn); document.body.insertBefore(row, document.body.firstChild);
+  }
+  function side() {
+    var sels = ['#accountActionBtn', '.login:not(.guest)', '#bellBtn', 'header button[onclick*="clearSession"]', '#loginOverlay'];
+    for (var i = 0; i < sels.length; i++) {
+      var el = document.querySelector(sels[i]); if (!el) continue;
+      var r = el.getBoundingClientRect(); if (!r.width || !r.height) continue;
+      var c = (r.left + r.right) / 2, w = window.innerWidth;
+      return c < w * 0.4 ? 'right' : 'left';
+    }
+    return 'left';
+  }
+  function place() {
+    if (!row) return;
+    var wrap = document.querySelector('.wrap'), mw = wrap ? getComputedStyle(wrap).maxWidth : 'none';
+    row.style.maxWidth = (mw && mw !== 'none') ? mw : '560px';
+    row.style.justifyContent = side() === 'left' ? 'flex-start' : 'flex-end';
+  }
+  function render() {
+    if (!latest || !latest.apkUrl || IS_IOS) { if (row) row.style.display = 'none'; return; }
+    var newer = APP_CODE > 0 ? (parseInt(latest.versionCode, 10) > APP_CODE) : true;
+    if (IN_APP && !newer) { if (row) row.style.display = 'none'; return; }
+    build();
+    if (IN_APP) { btn.innerHTML = SVG + '<span>حمّل التحديث</span>'; btn.className = 'upd'; }
+    else { btn.innerHTML = SVG + '<span>حمّل التطبيق الآن</span>'; btn.className = ''; }
+    btn.id = 'mktAppBtn'; row.style.display = 'flex'; place();
+  }
+  function check() {
+    if (navigator.onLine === false || !/^https?:$/.test(location.protocol)) return;
+    var u = location.href.split('#')[0].split('?')[0].replace(/[^\/]*$/, '') + 'app-version.json?_=' + Date.now();
+    fetch(u, { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) { if (j && j.apkUrl && /^https:\/\/github\.com\//.test(j.apkUrl)) { latest = j; render(); } }).catch(function () {});
+  }
+  function start() { check(); setInterval(place, 2500); window.addEventListener('resize', place); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
+
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+
+
+
+
+
+
+
+
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://lavndrs120.github.io/og-card.jpg">
+<!--LIVE_META_START-->
+<title>LAVNDR120 · $0.00 ▲ 0.00% — قيمة الطلبات لحظة بلحظة</title>
+<meta name="description" content="قيمة الطلبات الآن $0.00 (▲ 0.00%). لاڤندرز تكشف سلوك المستهلك: ماذا يطلب الناس فعلاً، ومتى، ومن أي بزنس، من الطلبات الحقيقية لـ120 بزنس وبراند، ويظهر في مؤشر استهلاكي حي LAVNDR120.">
+
+
+<meta name="twitter:title" content="LAVNDR120 · $0.00 ▲ 0.00% — قيمة الطلبات لحظة بلحظة">
+<meta name="twitter:description" content="قيمة الطلبات الآن $0.00 (▲ 0.00%). لاڤندرز تكشف سلوك المستهلك: ماذا يطلب الناس فعلاً، ومتى، ومن أي بزنس، من الطلبات الحقيقية لـ120 بزنس وبراند، ويظهر في مؤشر استهلاكي حي LAVNDR120.">
+
+<!--LIVE_META_END-->
+
+<meta name="robots" content="index,follow,max-image-preview:large">
+
+<script>
+var LANG=(function(){try{var q=new URLSearchParams(location.search).get('lang');if(q==='en'||q==='ar')localStorage.setItem('mkv2_lang',q);return localStorage.getItem('mkv2_lang')==='en'?'en':'ar'}catch(e){return 'ar'}})();
+function t(a,e){return LANG==='en'?e:a}
+var L=t;
+if(LANG==='en'){document.documentElement.lang='en';document.documentElement.dir='ltr'}
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--void:#04040A;--gold:#C9A84C;--text:rgba(255,255,255,.9);--dim:rgba(255,255,255,.45);--faint:rgba(255,255,255,.18);--line:rgba(255,255,255,.08)}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:radial-gradient(900px 500px at 50% -10%,rgba(201,168,76,.10),transparent),var(--void);color:var(--text);font-family:'Inter',system-ui,-apple-system,'Segoe UI',Tahoma,sans-serif;min-height:100vh}
+body::after{content:'';position:fixed;inset:0;z-index:-1;background:linear-gradient(rgba(6,6,12,.90) 0%,rgba(6,6,12,.62) 40%,rgba(6,6,12,.82) 100%),url(bg-m.jpg) center/cover no-repeat;pointer-events:none}
+@media(min-width:900px){body::after{background:linear-gradient(rgba(6,6,12,.78),rgba(6,6,12,.70)),url(bg-d.jpg) center/cover no-repeat}}
+.wrap{max-width:440px;margin:0 auto;padding:18px 18px 48px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:26px}
+.login.guest{border-color:rgba(255,255,255,.3);color:#e8e8ee}
+.login{flex:1 1 0;min-width:0;white-space:nowrap;text-align:center;background:none;border:1px solid var(--gold);color:var(--gold);border-radius:100px;padding:10px 8px;font-size:12.5px;font-weight:700;cursor:pointer}
+.gl,.lead,.sub,.foot{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:18px;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.lead{padding:12px 14px;margin-bottom:10px!important}.sub{padding:10px 14px;margin-bottom:16px!important}.foot{padding:12px}
+.logo{text-align:center;font-size:30px;font-weight:900;letter-spacing:2px;background:linear-gradient(135deg,#C9A84C,#F0D080);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.tag{text-align:center;font-size:11px;color:#666;letter-spacing:3px;margin:4px 0 26px}
+.back{background:none;border:none;color:var(--dim);font-size:12.5px;cursor:pointer;margin-bottom:14px}
+.lead{font-size:13px;color:#aaa;line-height:1.9;margin-bottom:6px;text-align:center}
+.sub{font-size:11px;color:#777;line-height:1.8;margin-bottom:20px;text-align:center}
+.tile{cursor:pointer;border-radius:20px;padding:2px;margin-bottom:16px}
+.tile>div{border-radius:18px;padding:20px 18px;text-align:right}
+.tile .ic{font-size:30px;margin-bottom:6px}
+.tile .tt{font-size:19px;font-weight:900;letter-spacing:.5px}
+.tile .ss{font-size:12.5px;line-height:1.8;margin-top:6px}
+.tile .go{margin-top:12px;font-size:12px;font-weight:700}
+.price{font-size:12px;margin-top:8px;font-weight:700}
+.btn{width:100%;padding:14px;border:none;border-radius:12px;font-weight:900;font-size:14px;cursor:pointer}
+.var{flex:1;min-width:90px;padding:10px 6px;border-radius:12px;cursor:pointer;font-size:12px;font-weight:700;background:transparent}
+.note{font-size:10.5px;color:var(--dim);line-height:1.7;margin-top:12px;text-align:center}
+.foot{margin-top:30px;text-align:center;font-size:11px;color:#555}
+.foot a{color:var(--gold);text-decoration:none}
+.pos{color:#10B981}.neg{color:#F43F5E}
+/* ── البطاقة الرسمية لصافي قيمة الأصول — نفس تنسيق الداشبورد حرفياً (الخطوط والألوان والتسميات) ── */
+:root{--glass:rgba(255,255,255,.04);--glass-border:rgba(255,255,255,.08);--emerald-solid:#10B981;--red:#F43F5E;--text-dim:rgba(255,255,255,.4);--text-faint:rgba(255,255,255,.15)}
+.glass{background:var(--glass);border:1px solid var(--glass-border);border-radius:20px;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.hero{text-align:center;padding:22px 16px;margin:0 0 16px}
+.hero-eyebrow{font-size:11px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:8px;opacity:.8}
+.hero-ticker{font-family:'Playfair Display',serif;font-size:42px;font-weight:700;background:linear-gradient(135deg,#C9A84C 0%,#F0D080 50%,#C9A84C 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-1px;line-height:1;margin-bottom:4px}
+.hero-subtitle{font-size:12px;color:var(--text-dim);letter-spacing:1px}
+.nav-card{padding:24px;margin-bottom:16px;position:relative;overflow:hidden}
+.nav-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.5}
+.nav-label{font-size:11px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
+.nav-value{font-family:'Playfair Display',serif;font-size:48px;font-weight:400;line-height:1;margin-bottom:8px}
+.nav-value.pos{color:var(--emerald-solid)}.nav-value.neg{color:var(--red)}
+.nav-change{direction:ltr;display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:500;padding:4px 12px;border-radius:100px}
+.nav-change.pos{background:rgba(16,185,129,.15);color:var(--emerald-solid)}.nav-change.neg{background:rgba(244,63,94,.15);color:var(--red)}
+.nav-meta{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;margin-top:20px;border-top:1px solid var(--glass-border);padding-top:16px}
+.nav-meta-item{text-align:center}.nav-meta-item:not(:last-child){border-left:1px solid var(--glass-border)}
+.nav-meta-label{font-size:10px;color:var(--text-faint);margin-bottom:4px}.nav-meta-val{font-size:14px;font-weight:500}
+.dl-badge{position:absolute;top:10px;left:12px;z-index:3;font-size:10px;font-weight:700;padding:3px 10px;border-radius:30px;letter-spacing:.3px;pointer-events:none}
+.dl-live{background:rgba(16,185,129,.16);color:#34D399;border:1px solid rgba(16,185,129,.45)}
+.dl-live::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:#10B981;margin-left:6px;animation:dlp 1.4s infinite}
+@keyframes dlp{0%,100%{opacity:1}50%{opacity:.25}}
+.ab{font-size:11px;line-height:1.8;color:#9a9a9a;text-align:center;margin:0 0 12px}
+/* الصفحة الأولى: شاشة واحدة بلا نزول */
+.wrap{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;padding:10px 18px 12px}
+@media(max-height:840px){.ab{display:none}}
+@media(max-height:760px){.hero{padding:12px 16px;margin-bottom:10px}.hero-ticker{font-size:34px}.nav-card{padding:16px 20px;margin-bottom:10px}.nav-value{font-size:40px}.nav-meta{margin-top:12px;padding-top:10px}.lead{padding:8px 12px}.sub{padding:8px 12px;margin-bottom:10px!important}}
+.top{margin-bottom:12px}.tag{margin-bottom:6px!important}
+.cta{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;width:100%;padding:16px 12px;font-size:16px;margin:6px 0 4px;border-radius:16px;font-weight:900;cursor:pointer;color:#1a1230;border:1px solid transparent}
+.cta .ci{font-size:22px;line-height:1}.cta .ct{font-size:15px;font-weight:900}.cta .cs{font-size:10.5px;font-weight:600;opacity:.8}
+.cta-gold{background:linear-gradient(135deg,#F0D080,#C9A84C);animation:pulseG 2.2s ease-in-out infinite}
+.tile.hl-g{background:linear-gradient(135deg,#F0D080,#C9A84C,#F0D080)!important;animation:pulseG 2.2s ease-in-out infinite}
+.tile.hl-e{background:linear-gradient(135deg,#6EE7B7,#10B981,#6EE7B7)!important;animation:pulseE 2.2s ease-in-out infinite;animation-delay:1.1s}
+.cta-em{background:linear-gradient(135deg,#6EE7B7,#10B981);animation:pulseE 2.2s ease-in-out infinite;animation-delay:1.1s}
+@keyframes pulseG{0%{box-shadow:0 0 0 0 rgba(201,168,76,.55)}70%{box-shadow:0 0 0 14px rgba(201,168,76,0)}100%{box-shadow:0 0 0 0 rgba(201,168,76,0)}}
+@keyframes pulseE{0%{box-shadow:0 0 0 0 rgba(16,185,129,.55)}70%{box-shadow:0 0 0 14px rgba(16,185,129,0)}100%{box-shadow:0 0 0 0 rgba(16,185,129,0)}}
+@media(prefers-reduced-motion:reduce){.cta{animation:none}}
+.foot{margin-top:auto!important;padding-top:12px}
+/* نافذة المسارات: تنفتح من نقطة الزر وتنسحب إليها عند الرجوع */
+#pop{position:fixed;inset:0;z-index:50;display:none;overflow-y:auto;background:rgba(6,6,12,.99);opacity:0;transform:scale(.45);transition:opacity .3s ease,transform .36s cubic-bezier(.22,.8,.3,1);will-change:transform,opacity}
+#pop.open{opacity:1;transform:none}
+#pop:not(.open) .tile,body.pop-open .cta{animation:none!important}
+#pop.open .tile.hl-g{animation-delay:.5s}
+#pop.show{display:block}
+#popBody{max-width:440px;margin:0 auto;padding:18px 18px 48px}
+
+/* الصفحة الرئيسية للزائر: شاشة واحدة بلا سكرول (مضغوطة) */
+body.is-home .wrap{padding-bottom:14px}
+body.is-home .top{margin-bottom:10px}
+body.is-home .hero{padding:2px 16px;margin:0 0 8px}
+body.is-home .hero-eyebrow{margin-bottom:2px}
+body.is-home .hero-ticker{font-size:36px;line-height:1.15}
+body.is-home .nav-card{padding:16px 18px;margin-bottom:10px}
+body.is-home .nav-value{font-size:42px;margin-bottom:6px}
+body.is-home .nav-label{margin-bottom:4px}
+body.is-home .nav-meta{margin-top:10px;padding-top:10px}
+body.is-home .lead,body.is-home .sub{margin-bottom:8px!important}
+body.is-home .cta{margin:4px 0 2px;padding:13px 12px}
+body.is-home .foot{margin-top:10px}
+html[dir=ltr] .tile>div,html[dir=ltr] [style*="text-align:right"]{text-align:left!important}
+html[dir=ltr] .nav-meta-item:not(:last-child){border-left:0;border-right:1px solid var(--glass-border)}
+html[dir=ltr] .dl-badge{left:auto;right:12px}html[dir=ltr] .dl-badge::before{margin-left:0;margin-right:6px}
+.login.lang{flex:0 0 auto;padding:10px 16px;letter-spacing:.5px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+/* no-copy */
+html,body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+input,textarea,[contenteditable="true"],[contenteditable=""]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+</style>
+<style>#footLinksEn,[onclick*="builder.html"]{display:none!important}</style></head>
+<body>
+<div class="wrap">
+  <h1 class="sr">لاڤندرز (Lavenders) — LAVNDR120: كشف سلوك المستهلك من الطلبات الحقيقية لـ120 بزنس وبراند</h1>
+  <div class="top gl" style="padding:8px 10px;gap:8px">
+    <button class="login" onclick="goLogin()" id="btnLogin">تسجيل الدخول</button>
+    <button class="login" onclick="goSubs()" id="btnSubs" style="display:none">اشتراكاتي</button>
+    <button class="login guest" onclick="goGuest()" id="btnGuest">دخول زائر · تجربة</button>
+    <button class="login lang" onclick="toggleLang()" id="btnLang" aria-label="Language">EN</button>
+  </div>
+<!--LIVE_CARD_START-->
+<div class="hero"><div class="hero-eyebrow">المؤشر الاستهلاكي</div><div class="hero-ticker">LAVNDR120</div><div class="hero-subtitle" id="lastUpdateText">آخر تحديث 23:54</div></div>
+<div class="glass nav-card" id="liveCard"><span class="dl-badge dl-live">مباشر · لحظة بلحظة</span><div class="nav-label">قيمة الطلبات لحظة بلحظة</div><div class="nav-value pos">$0.00</div><div class="nav-change pos">▲ +0.00 (0.00%)</div><div class="nav-meta"><div class="nav-meta-item"><div class="nav-meta-label">High</div><div class="nav-meta-val">$0.00</div></div><div class="nav-meta-item"><div class="nav-meta-label">Low</div><div class="nav-meta-val">$0.00</div></div><div class="nav-meta-item"><div class="nav-meta-label">Volatility</div><div class="nav-meta-val">0.00%</div></div></div></div>
+<p class="ab">لاڤندرز تكشف سلوك المستهلك: ماذا يطلب الناس فعلاً، ومتى، ومن أي بزنس، من الطلبات الحقيقية لـ120 بزنس وبراند، ويظهر في مؤشر استهلاكي حي LAVNDR120.</p>
+<!--LIVE_CARD_END-->
+  <div id="view"></div>
+  <noscript><div style="text-align:center;font-size:12px;color:#9a9a9a;line-height:2;margin:12px 0">
+<p>لاڤندرز (Lavenders) تكشف سلوك المستهلك من الطلبات الحقيقية لـ120 بزنس وبراند، ومؤشرها الاستهلاكي LAVNDR120 يتحرك مع طلباتهم الفعلية. لا يوجد داخل المنصة بيع أو شراء أو تداول لحصص، ولا وعود بعوائد.</p>
+<p>مسار Join Up (متابعة السوق): <a href="lava.html">لاڤا</a> · <a href="vindex.html">ڤندكس</a> · <a href="magma.html">ماقما</a></p>
+<p>مسار الحركة الاقتصادية (المشاركة في بناء السوق): <a href="oms.html">OMS</a> · <a href="reseller.html">Reseller</a> · <a href="franchise.html">Franchise</a> · <a href="tycoon.html">Tycoon</a></p>
+<p><a href="packages.html">مقارنة الباقات السبع</a> · <a href="consumer-index.html">ما هو المؤشر الاستهلاكي؟</a> · <a href="faq.html">أسئلة شائعة</a></p>
+<p>يلزم تفعيل جافاسكربت لاستعراض الباقات والاشتراك.</p></div></noscript>
+  <div style="text-align:center;margin:26px 0 0;font-size:11.5px"><span id="footLinks"><a href="about.html" style="color:rgba(255,255,255,.45);text-decoration:underline">عن لاڤندرز</a> · <a href="packages.html" style="color:rgba(255,255,255,.45);text-decoration:underline">الباقات</a> · <a href="businesses.html" style="color:rgba(255,255,255,.45);text-decoration:underline">للبزنسات والبراندات</a> · <a href="app-builder.html" style="color:rgba(255,255,255,.45);text-decoration:underline">بناء التطبيقات</a> · <a href="golden-certificate.html" style="color:rgba(255,255,255,.45);text-decoration:underline">الشهادة الذهبية</a> · <a href="insights/ar/index.html" style="color:rgba(255,255,255,.45);text-decoration:underline">مقالات</a> · <a href="embed.html" style="color:rgba(255,255,255,.45);text-decoration:underline">ودجت</a> · <a href="privacy.html" style="color:rgba(255,255,255,.45);text-decoration:underline">سياسة الخصوصية</a></span></div>
+  <div class="foot" id="footAcct">لديك حساب؟ <a href="dashboard.html" onclick="goLogin();return false;">ادخل إلى حسابك</a></div>
+</div>
+<div id="pop"><div id="popBody"></div></div>
+
+<script src="https://lavndrs120.github.io/catalog.js"></script>
+<script>
+var DEMO_LINKS = { fendex: ['dashboard.html?demo=oracle', 'معاينة الأوراكل كاملاً'], magma: ['dashboard.html?demo=magma', 'معاينة دليل ماقما كاملاً'], reseller: ['dashboard.html?demo=reseller', 'معاينة استوديو الريسلر كاملاً'], franchise: ['dashboard.html?demo=franchise', 'معاينة مقر الفرانشايز كاملاً'], oms: ['business.html?demo=1', 'معاينة صفحة بزنسك كاملة'] };
+</script>
+<script>
+// تحديث بطاقة المؤشر مباشرةً في المتصفح (النسخة المكتوبة في الـHTML تحدّثها GitHub Action كل 10 دقائق للبوتات)
+(function(){
+  var W='https://lavndr.omssolutionorders.workers.dev/?action=public_index';
+  function f(v){var n=parseFloat(v);return isNaN(n)?'0.00':n.toFixed(2)}
+  function a(v){return String(v==null?'0.00':v).replace(/^[+-]/,'')}
+  fetch(W).then(function(r){return r.json()}).then(function(d){
+    if(!d||!d.index)return; var x=d.index,c=parseFloat(x.change)||0,p=document.getElementById('liveCard'); if(!p)return;
+    var cls=c>=0?'pos':'neg';
+    var v=p.querySelector('.nav-value'); v.textContent='$'+f(x.NAV); v.className='nav-value '+cls;
+    var ch=p.querySelector('.nav-change'); ch.className='nav-change '+cls; ch.textContent=(c>=0?'▲ +':'▼ -')+a(x.change)+' ('+a(x.changePercent)+'%)';
+    var m=p.querySelectorAll('.nav-meta-val'); if(m.length>=3){m[0].textContent='$'+f(x.dayHigh);m[1].textContent='$'+f(x.dayLow);m[2].textContent=f(x.volatility)+'%';}
+    var u=document.getElementById('lastUpdateText'); if(u&&d.timestamp){var q=new Date(d.timestamp);u.textContent=t('آخر تحديث ','Updated ')+('0'+q.getHours()).slice(-2)+':'+('0'+q.getMinutes()).slice(-2);}
+  }).catch(function(){});
+})();
+</script>
+<script>
+// ── بيانات المسارات والباقات (نفس نصوص الداشبورد) ──
+const GATE_THEMES = {
+  gold:    { border:'linear-gradient(135deg,#C9A84C,#6B21A8,#C9A84C)', bg:'linear-gradient(160deg,#1a1230 0%,#0d0a1a 100%)', eyebrow:'#F0D080', title:'#FFF7E0', body:'rgba(255,247,224,0.85)', btnBg:'linear-gradient(135deg,#F0D080,#C9A84C)', btnColor:'#1a1230', glow:'rgba(201,168,76,0.35)' },
+  orange:  { border:'linear-gradient(135deg,#F97316,#7C2D12,#F97316)', bg:'linear-gradient(160deg,#2a1408 0%,#170a05 100%)', eyebrow:'#FDBA74', title:'#FFF1E0', body:'rgba(255,241,224,0.85)', btnBg:'linear-gradient(135deg,#FDBA74,#F97316)', btnColor:'#2a1408', glow:'rgba(249,115,22,0.35)' },
+  teal:    { border:'linear-gradient(135deg,#2DD4BF,#0F4C5C,#2DD4BF)', bg:'linear-gradient(160deg,#08202a 0%,#050f14 100%)', eyebrow:'#99F6E4', title:'#E6FFFA', body:'rgba(230,255,250,0.85)', btnBg:'linear-gradient(135deg,#99F6E4,#2DD4BF)', btnColor:'#08202a', glow:'rgba(45,212,191,0.3)' },
+  plain:   { border:'linear-gradient(135deg,rgba(255,255,255,0.18),rgba(255,255,255,0.06))', bg:'linear-gradient(160deg,#12121c 0%,#0a0a12 100%)', eyebrow:'#C9A84C', title:'#F5F5F5', body:'rgba(255,255,255,0.8)', btnBg:'var(--gold)', btnColor:'#04040A', glow:'rgba(201,168,76,0.25)' },
+  emerald: { border:'linear-gradient(135deg,#34D399,#C9A84C,#34D399)', bg:'linear-gradient(160deg,#07241a 0%,#050f0b 100%)', eyebrow:'#6EE7B7', title:'#ECFDF5', body:'rgba(236,253,245,0.85)', btnBg:'linear-gradient(135deg,#6EE7B7,#C9A84C)', btnColor:'#07241a', glow:'rgba(52,211,153,0.35)' }
+};
+
+// نصوص العروض (التسويقية الرسمية). path: joinup | movement
+const GATE_OFFERS = {
+  oms: {
+    path: 'movement', theme: 'teal', icon: '📲', title: 'OMS', eyebrow: 'للبزنسات والبراندات فقط',
+    short: 'نظام إدارة الطلبات — خليك لاصق في هواتف عملائك بلمسة.',
+    body: 'ما الذي يحدث لما تمحو المسافات؟\n• تمحو الفجوة\n• تمحو الزمن\n— بلمسة.\n\nنظام إدارة الطلبات OMS يعمل من الويب وعلى أندرويد لتبقى ملتصقًا في هواتف المستفيدين من خدمتك أو منتجك.',
+    variants: [
+      { tier: 'oms_services', label: 'براند خدمات', price: '429', period: 'اشتراك' },
+      { tier: 'oms_products', label: 'براند منتجات', price: '492', period: 'اشتراك' }
+    ],
+    cta: 'ابدأ اشتراك OMS'
+  },
+  lava: {
+    path: 'joinup', theme: 'plain', icon: '🌋', title: 'لاڤا', eyebrow: 'داتا السوق',
+    short: 'لاڤا هي داتا السوق نفسها — مش لازم تكون من الـ120.',
+    body: 'ماذا لو ما بقيت تشوف السوق من الخارج بس؟\nلاڤندرز بدأت بـ120 بزنس وبراند، ولما اجتمعت الطلبات ظهر سوق له حركة ومؤشر استهلاكي وداتا بتتكوّن مع كل حركة. سمّينا الداتا دي لاڤا.\n\nلاڤا مش تقرير بتقرأه، ولا أرقام بتتفرج عليها — لاڤا هي داتا السوق. الـ120 بيكوّنوا السوق، وإنت تقدر تدخل وتستخدم اللاڤا.\n(للمطالعة فقط.)',
+    variants: [
+      { tier: 'lava', label: 'يوم واحد', price: '1.4', period: '/ يوم' },
+      { tier: 'annual', label: 'سنة كاملة', price: '249', period: '/ سنة' }
+    ],
+    cta: 'اشترك في لاڤا'
+  },
+  fendex: {
+    path: 'joinup', theme: 'gold', icon: '🔮', title: 'ڤندكس', eyebrow: 'LAVENDERS ORACLE — 120 ڤندر فقط',
+    short: 'احمِ اللاڤا بالامتلاك، وخذ تقرير الأوراكل التنبؤي.',
+    body: 'احمِ اللاڤا بالامتلاك، واحصل على تقرير الأوراكل التنبؤي.\nامتلك داتا تحليل السوق، واكشف سلوك المستهلك بعيدًا عن أيدي 1,000 مشترك.\nاحصل على تنبؤ السوق وسلوك المستهلك قبل أن يصبح ما تعرفه متاحًا للجميع.\n\nامتلك الأمس. افهم اليوم. واحتكر المستقبل.',
+    variants: [ { tier: 'fendex', label: 'سنة كاملة', price: '1,287', period: '/ سنة' } ],
+    cta: 'إنضم للڤندكس'
+  },
+  magma: {
+    path: 'joinup', theme: 'orange', icon: '🌋', title: 'ماقما', eyebrow: 'عضوية محدودة لـ500 فقط',
+    short: 'السوق مش اللي تعرفه — السوق هو اللي تقدر تختاره.',
+    body: 'لاڤندرز ما بدأت لتضيف لك متجرًا آخر — بدأت لتجمع لك السوق: 120 بزنس وبراند.\nبدل ما تكون مرتبط بما تعرفه بس، الآن عندك مجال أن تعرف أكثر، وترى أكثر، وتختار أكثر.\n\nبـ100$ في السنة تفتح لنفسك بابًا إلى سوق كامل. المكان محدود، والفرصة ليست للجميع.',
+    variants: [ { tier: 'magma', label: 'سنة كاملة', price: '100', period: '/ سنة' } ],
+    cta: 'ادخل ماقما'
+  },
+  reseller: {
+    path: 'movement', theme: 'emerald', icon: '🧩', title: 'RESELLER', eyebrow: '38 مقعدًا فقط',
+    short: '8 تطبيقات تقدمها لـ8 بزنسات مختلفة.',
+    body: 'أنت كـ Reseller ما بتبيع لعميل واحد — عندك 8 تطبيقات تقدر تقدمها لـ8 بزنسات مختلفة.\n\nقيمة التطبيق: $169.35\nقيمة حزمة الـ8 تطبيقات: $1,354.8\n\nتقدر تقدمها للمستهلكين بالقيمة التي تفضلها، بداية من:\n• $440.3 لبراندات الخدمات\n• $503.3 لبراندات المنتجات\n\nالمطلوب منك: تجيب البزنسات المناسبة وتقدم لها الحل. ونحن نوفر لك المنظومة الجاهزة للتشغيل.',
+    variants: [ { tier: 'reseller', label: 'عضوية الريسيلر', price: '1,354.8', period: '8 تطبيقات' } ],
+    cta: 'ابدأ كـ Reseller'
+  },
+  franchise: {
+    path: 'movement', theme: 'emerald', icon: '🏛️', title: 'FRANCHISE', eyebrow: '19 صاحب امتياز فقط',
+    short: 'ابنِ سوقك الخاص من 120 بزنس وبراند.',
+    body: 'مع امتياز لاڤندرز بتبني سوقك الخاص من 120 بزنس وبراند، كل بزنس عنده تطبيق طلبات خاص به، والـ120 تطبيق مربوطين داخل مؤشر سوق واحد.\n\nنوفر لك: ✓ منظومة كاملة جاهزة للتشغيل ✓ تدريب عملي ✓ دعم فني وتشغيلي مستمر\n\nقيمة امتلاك المنظومة $2,709 — ولتسهيل بناء سوقك لا تدفعها دفعة واحدة. تبدأ بحجز $90، ثم تكمل بدفعات حسب تقدّم بناء سوقك ($22.58 لكل بزنس وبراند). تقدر تقدمها للمستهلكين بالقيمة التي تفضلها بداية من $452 لبراندات الخدمات و$515 لبراندات المنتجات.',
+    variants: [ { tier: 'franchise', label: 'ابدأ بحجز $90', price: '2,709', period: 'إجمالي (دفعات)' } ],
+    cta: 'احجز امتيازك'
+  },
+  tycoon: {
+    path: 'movement', theme: 'gold', icon: '👑', title: 'TYCOON', eyebrow: 'تايكون المجال · تايكون القطاع',
+    short: 'قُد مجالًا كاملًا (20 سوقًا) أو قطاعًا جغرافيًا كاملًا (400 مؤشر).',
+    body: '',
+    variants: [
+      { tier: 'tycoon', label: 'تايكون المجال', price: '51,480', period: 'وكالة', eyebrow: 'تايكون واحد لكل مجال', cta: 'كن تايكون مجالك', scope: 'المجال (مطلوب — تايكون واحد لكل مجال)',
+        body: 'امتلك وكالة لاڤندرز لتقود الرحلة إلى خير الوجود.\nبقيمة $51,480 فقط تسمح لـ2,400 بزنس وبراند أن ينتظموا في سوق موحد — 20 سوقًا، في كل سوق 120 بزنس وبراند — وتشوف حركة السوق قدامك لحظة بلحظة.\n\nتايكون واحد لكل مجال. الوكالة بلا مدة زمنية، وتفاصيل الباقة وشروطها في صفحة اعتماد التمويل.' },
+      { tier: 'tycoon_sector', label: 'تايكون القطاع', price: '1,029,600', period: 'وكالة', eyebrow: 'تايكون واحد لكل قطاع جغرافي', cta: 'كن تايكون قطاعك', scope: 'القطاع الجغرافي (مطلوب — تايكون واحد لكل قطاع)',
+        body: 'واحد في قطاع جغرافي. 400 مؤشر سوق فعلي مباشر، لحظة بلحظة.<b>\n\nتولوا </b>وكالة لاڤندرز<b> لتقود الرحلة إلى خير الوجود.\n\nبقيمة 1,029,600$ فقط، </b>اليوم تخلق اليسر<b> وتسمح لـ 20 ضعف من وحدة 2,400 بزنس وبراند إنهم:\n\n• ينتظموا في سوق موحد. \n• يتمكنوا. \n• يتمتعوا ويستمتعوا برحلتهم الفردية، نعم، لكن في وجود جماعي.\n\n400 </b>مؤشر في القطاع<b>، كل 2,400 بزنس موزعه في 20 سوق في كل سوق 120 بزنس وبراند. جملتها 48000 بزنس وبراند متحدة في القطاع كامل\n\nتنمو بجمعهم عبر </b>أداة واحدة<b>، في </b>نظام بسيط<b>، وتشوف حركة السوق قدامك </b>لحظة بلحظة.<b>\n\n</b>إنت تايكون القطاع.<b>\n\nتايكون واحد لكل </b>قطاع جغرافي<b>، يقود الـ400 مؤشر في منظومة واحدة.\n\nوالوكالة بلا مدة زمنية، وتفاصيل الباقة وشروطها في صفحة اعتماد التمويل.\n\n</b>تولى وكالة لاڤندرز. كن تايكون قطاعك اليوم.*',
+        bodyEn: 'One in a Geographic Sector. 400 live, active markets index — moment by moment.\n\nAssume a Lavenders Agency and lead the journey toward a better existence.\n\nFor just $1,029,600, you create ease and enable 20 times the 2,400 businesses and brands to:\n\n• Organize within a unified market.\n• Become empowered.\n• Enjoy their individual journey, yes — but within a collective presence.\n\n400 indices in the sector comprising 2,400 businesses distributed across 20 markets, with 120 businesses and brands in each market. 48,000 businesses and brands in total united all in the sector\n\nGrow by bringing them together through one tool, within one simple system, and watch the market move before you, moment by moment.\n\nYou are the Sectoral Tycoon.\n\nOne Tycoon for each geographic sector, leading the 400 index within one ecosystem.\n\nThe agency has no fixed term; package details and terms are on the funding approval page.\n\nAssume a Lavenders Agency. Become the Tycoon of your sector today.' }
+    ],
+    cta: 'كن تايكون',
+    needsCountry: true,
+    funding: true
+  }
+};
+const GATE_PATHS = {
+  joinup: {
+    title: 'Join Up LAVENDERS', icon: '🔗', theme: 'plain',
+    sub: 'ادخل السوق: بيانات السوق وتقارير الذكاء ودليل الأنشطة.',
+    offers: ['lava', 'fendex', 'magma']
+  },
+  movement: {
+    title: 'Join the Economic Movement', icon: '🌍', theme: 'emerald',
+    sub: 'شارك في بناء السوق. أنت لا تشتري منتجًا — أنت تنضم إلى حركة تبني سوقًا.',
+    offers: ['oms', 'reseller', 'franchise', 'tycoon']
+  }
+};
+
+
+// ── النسخة الإنجليزية لنصوص الباقات (تُستبدل قبل LavCatalog.apply ليبقى تحديث الأسعار يعمل)
+const EN_OFFERS = {
+  oms: { title: 'OMS', eyebrow: 'FOR BUSINESSES AND BRANDS ONLY', short: 'Order management system — stay close to your customers\' phones with one touch.',
+    body: 'What happens when you erase distances?\n• You erase the gap\n• You erase time\n— with one touch.\n\nThe OMS order management system runs on the web and on Android so you stay close to the phones of the people who use your service or product.',
+    variants: [ { label: 'Services brand', period: 'subscription' }, { label: 'Products brand', period: 'subscription' } ], cta: 'Start OMS subscription' },
+  lava: { title: 'Lava', eyebrow: 'MARKET DATA', short: 'Lava is the market data itself — you do not have to be one of the 120.',
+    body: 'What if you no longer watched the market only from the outside?\nLavenders started with 120 businesses and brands, and when their orders came together a market appeared, with movement, a consumer index, and data forming with every move. We called that data Lava.\n\nLava is not a report you read, or numbers you watch — Lava is the market data. The 120 form the market, and you can come in and use the Lava.\n(Read-only.)',
+    variants: [ { label: 'One day', period: '/ day' }, { label: 'Full year', period: '/ year' } ], cta: 'Subscribe to Lava' },
+  fendex: { title: 'Vindex', eyebrow: 'LAVENDERS ORACLE — 120 VINDERS ONLY', short: 'Protect the Lava by owning it, and get the predictive Oracle report.',
+    body: 'Protect the Lava by owning it, and get the predictive Oracle report.\nOwn the market analysis data and uncover consumer behavior, away from the hands of 1,000 subscribers.\nGet the market forecast and consumer behavior before what you know becomes available to everyone.\n\nOwn yesterday. Understand today. Own the future.',
+    variants: [ { label: 'Full year', period: '/ year' } ], cta: 'Join Vindex' },
+  magma: { title: 'Magma', eyebrow: 'LIMITED MEMBERSHIP — 500 ONLY', short: 'The market is not what you know — it is what you can choose.',
+    body: 'Lavenders did not start to add another shop for you — it started to bring you the market: 120 businesses and brands.\nInstead of being tied only to what you know, you now have room to know more, see more, and choose more.\n\nFor $100 a year you open a door to a whole market. The place is limited, and the opportunity is not for everyone.',
+    variants: [ { label: 'Full year', period: '/ year' } ], cta: 'Enter Magma' },
+  reseller: { title: 'RESELLER', eyebrow: '38 SEATS ONLY', short: '8 apps you offer to 8 different businesses.',
+    body: 'As a Reseller you do not sell to one client — you have 8 apps you can offer to 8 different businesses.\n\nApp value: $169.35\nValue of the 8-app bundle: $1,354.8\n\nYou can offer them to consumers at the value you prefer, starting from:\n• $440.3 for service brands\n• $503.3 for product brands\n\nYour part: bring the right businesses and present the solution. We provide the ready-to-run system.',
+    variants: [ { label: 'Reseller membership', period: '8 apps' } ], cta: 'Start as a Reseller' },
+  franchise: { title: 'FRANCHISE', eyebrow: 'ONLY 19 FRANCHISE OWNERS', short: 'Build your own market of 120 businesses and brands.',
+    body: 'With a Lavenders franchise you build your own market of 120 businesses and brands. Every business has its own order app, and the 120 apps are linked inside one market index.\n\nWe provide: ✓ A complete ready-to-run system ✓ Hands-on training ✓ Ongoing technical and operational support\n\nOwning the system is valued at $2,709 — and to make building your market easier you do not pay it all at once. You start with a $90 reservation, then complete with payments as your market is built ($22.58 per business and brand). You can offer it to consumers at the value you prefer, starting from $452 for service brands and $515 for product brands.',
+    variants: [ { label: 'Start with a $90 reservation', period: 'Total (installments)' } ], cta: 'Reserve your franchise' },
+  tycoon: { title: 'TYCOON', eyebrow: 'FIELD TYCOON · SECTOR TYCOON', short: 'Lead a whole field (20 markets) or a whole geographic sector (400 indices).', body: '',
+    variants: [
+      { label: 'Field Tycoon', period: 'Agency', eyebrow: 'One Tycoon per field', cta: 'Become your field\'s Tycoon', scope: 'Field (required — one Tycoon per field)',
+        body: 'Own a Lavenders agency to lead the journey toward a better existence.\nFor only $51,480 you allow 2,400 businesses and brands to be organized in one market — 20 markets, each with 120 businesses and brands — and you watch the market move in front of you, moment by moment.\n\nOne Tycoon per field. The agency has no fixed term; package details and terms are on the funding approval page.' },
+      { label: 'Sector Tycoon', period: 'Agency', eyebrow: 'One Tycoon per geographic sector', cta: 'Become your sector\'s Tycoon', scope: 'Geographic sector (required — one Tycoon per sector)' }
+    ], cta: 'Become a Tycoon' }
+};
+const EN_PATHS = { joinup: { sub: 'Enter the market: market data, intelligence reports and the activity directory.' }, movement: { sub: 'Take part in building the market. You are not buying a product — you are joining a movement that builds a market.' } };
+if (LANG === 'en') {
+  Object.keys(EN_OFFERS).forEach(function (k) {
+    var o = GATE_OFFERS[k], e = EN_OFFERS[k]; if (!o) return;
+    ['title', 'eyebrow', 'short', 'body', 'cta'].forEach(function (f) { if (e[f] !== undefined) o[f] = e[f]; });
+    e.variants.forEach(function (ev, i) { var v = o.variants[i]; if (!v) return;
+      if (v.bodyEn && !ev.body) { v.body = v.bodyEn; }
+      ['label', 'period', 'eyebrow', 'cta', 'scope', 'body'].forEach(function (f) { if (ev[f] !== undefined) v[f] = ev[f]; });
+      delete v.bodyEn; });
+  });
+  Object.keys(EN_PATHS).forEach(function (k) { GATE_PATHS[k].sub = EN_PATHS[k].sub; });
+}
+function enFix() {
+  if (LANG !== 'en') return;
+  try { var f = GATE_OFFERS.franchise.variants[0]; var m = String(f.label).match(/\$([\d,\.]+)/); f.label = 'Start with a $' + (m ? m[1] : '90') + ' reservation'; } catch (e) {}
+}
+
+const REFUND_DAYS = 21;
+if (window.LavCatalog) { LavCatalog.apply(GATE_OFFERS); enFix(); LavCatalog.refresh(function (ch) { if (ch) { LavCatalog.apply(GATE_OFFERS); enFix(); try { if (popOpen) render(location.hash); } catch (e) {} } }); }
+const view = document.getElementById('view');
+
+// جلسة قائمة في نفس التبويب → ادخل الداشبورد مباشرة (يستعيد مكانك الأخير)
+try { if (sessionStorage.getItem('mkv2_token') && sessionStorage.getItem('mkv2_email') && !/home=1/.test(location.search)) location.replace(MKP.app); } catch (e) {}
+
+function priceFrom(o) {
+  const vs = o.variants.map(v => parseFloat(String(v.price).replace(/,/g, ''))).filter(n => !isNaN(n));
+  const lo = Math.min.apply(null, vs);
+  return (o.variants.length > 1 ? t('ابتداءً من $','From $') : '$') + lo.toLocaleString('en-US');
+}
+function decorateCard() {
+  // البطاقة نفسها يعيد توليدها السكربت آلياً، لذا نعدّل تسمياتها وقت العرض (آمن لإعادة الاستدعاء)
+  try {
+    const card = document.getElementById('liveCard'); if (!card || card.dataset.dec) return; card.dataset.dec = '1';
+    const lab = card.querySelector('.nav-label'); if (lab) lab.textContent = t('قيمة الطلبات لحظة بلحظة','Order value');
+    const ch = card.querySelector('.nav-change');
+    if (ch) { const df = document.createElement('div'); df.style.cssText = 'font-size:11.5px;color:#a8a8a8;line-height:1.6;margin-top:6px;text-align:right';
+      df.textContent = t('نكشف سلوك المستهلك: ماذا يطلب الناس فعلاً، ومن أي بزنس، من الطلبات الحقيقية لـ120 بزنس وبراند','We reveal consumer behaviour: what people actually order, and from which businesses, from the real orders of 120 businesses and brands'); ch.insertAdjacentElement('afterend', df); }
+    const T = { 'High': [t('أعلى قيمة','High'), t('أعلى قيمة وصل إليها المؤشر اليوم.','The highest value the index reached today.')], 'Low': [t('أدنى قيمة','Low'), t('أدنى قيمة نزل إليها المؤشر اليوم.','The lowest value the index fell to today.')], 'Volatility': [t('التذبذب','Volatility'), t('مدى تغيّر قيمة المؤشر خلال اليوم؛ كلما زاد زادت الحركة.','How much the index moved during the day; the higher it is, the more movement.')] };
+    const meta = card.querySelector('.nav-meta'); if (!meta) return;
+    const hint = document.createElement('div'); hint.style.cssText = 'font-size:11px;color:#8a8a8a;text-align:center;margin-top:6px;min-height:18px;line-height:1.6';
+    hint.textContent = t('اضغط على أي رقم لمعرفة معناه','Tap any figure to see what it means'); meta.insertAdjacentElement('afterend', hint);
+    card.querySelectorAll('.nav-meta-item').forEach(it => {
+      const l = it.querySelector('.nav-meta-label'), k = l && l.textContent.trim(); if (!T[k]) return;
+      l.textContent = T[k][0]; it.style.cursor = 'pointer';
+      it.addEventListener('click', () => { hint.style.color = 'var(--gold)'; hint.textContent = T[k][0] + ': ' + T[k][1]; });
+    });
+    const ab = document.querySelector('p.ab'); if (ab) ab.style.display = 'none';
+    if (LANG === 'en') { var he = card.parentNode.querySelector('.hero-eyebrow'); if (he) he.textContent = 'CONSUMER INDEX'; var bd = card.querySelector('.dl-badge'); if (bd) bd.textContent = 'LIVE · REAL-TIME'; var lu = document.getElementById('lastUpdateText'); if (lu) lu.textContent = lu.textContent.replace('آخر تحديث', 'Updated'); }
+  } catch (e) {}
+}
+function toggleHow() {
+  const b = document.getElementById('howBody'), a = document.getElementById('howArrow'), btn = document.getElementById('howBtn'); if (!b) return;
+  const open = b.style.display === 'none'; b.style.display = open ? 'block' : 'none';
+  a.style.transform = open ? 'rotate(180deg)' : ''; btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+function home() {
+  const step = (n, t, s) => `<div style="display:flex;gap:12px;align-items:flex-start;padding:9px 0;border-top:1px solid rgba(255,255,255,.06)">
+      <div style="flex:0 0 26px;height:26px;border-radius:50%;background:rgba(201,168,76,.15);color:var(--gold);font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center">${n}</div>
+      <div style="text-align:right"><div style="font-size:13.5px;font-weight:800;color:#f2f2f2">${t}</div><div style="font-size:12px;color:#9a9a9a;line-height:1.8">${s}</div></div></div>`;
+  const row = (ic, t, s, c) => `<div style="display:flex;gap:10px;align-items:center;padding:5px 0;text-align:right"><div style="font-size:19px">${ic}</div><div><div style="font-size:13px;font-weight:800;color:${c}">${t}</div><div style="font-size:11px;color:#9a9a9a;line-height:1.6">${s}</div></div></div>`;
+  view.innerHTML = `<div class="lead" style="text-align:right;padding:0"><button type="button" id="howBtn" aria-expanded="false" onclick="toggleHow()" style="width:100%;display:flex;justify-content:space-between;align-items:center;background:none;border:0;color:#f2f2f2;font:inherit;font-size:13.5px;font-weight:800;padding:9px 14px;cursor:pointer"><span>${t('كيف يتحرك المؤشر؟','How does the index move?')}</span><span id="howArrow" style="color:var(--gold);transition:transform .25s">▼</span></button>
+      <div id="howBody" style="display:none;padding:0 14px 8px">
+      ${step(t('١','1'), t('120 بزنس','120 businesses'), t('لكل بزنس تطبيق طلبات خاص به.','Each one has its own order app.'))}
+      ${step(t('٢','2'), t('كل طلب جديد','Every new order'), t('يرفع وزن بزنسه داخل المؤشر.','raises its business\'s weight inside the index.'))}
+      ${step(t('٣','3'), t('طلبات أكثر','More orders'), t('تعني قيمة أعلى للمؤشر.','mean a higher index value.'))}</div></div>
+<div class="sub" style="text-align:right;padding:6px 14px">
+      ${row('📊', t('أريد متابعة السوق','I want to follow the market'), t('Join Up — دخول إلى السوق وبياناته وتقاريره','Join Up — enter the market, its data and reports'), 'var(--gold)')}
+      ${row('🏗️', t('أريد المشاركة في الحركة الاقتصادية','I want to join the Economic Movement'), t('البناء والحركة الاقتصادية — شارك في بناء السوق','Building and the Economic Movement — help build the market'), '#6EE7B7')}
+      <div style="font-size:11px;color:#777;text-align:center;border-top:1px solid rgba(255,255,255,.06);padding-top:6px">${t('اشتراك في خدمة وبيانات: ماذا يطلب الناس اليوم','Subscribe to a service and data: what people order today')}</div></div>
+    <button class="cta cta-gold" id="ctaBtn" onclick="openPaths(this)">${t('اتجه لمسارك المفضل ←','Choose your path →')}</button>`;
+  document.body.classList.add('is-home');
+  decorateCard();
+}
+function chooserView() {
+  const tile = key => {
+    const p = GATE_PATHS[key], t = GATE_THEMES[p.theme];
+    return `<div class="tile ${key==='joinup'?'hl-g':'hl-e'}" role="button" tabindex="0" onkeydown="if(event.key==='Enter')this.click()" onclick="go('p','${key}')" style="background:${t.border}">
+      <div style="background:${key==='joinup'?'linear-gradient(160deg,#1f1a0c 0%,#0d0a05 100%)':t.bg}"><div class="ic">${p.icon}</div>
+      <div class="tt" style="color:${t.title}">${p.title}</div>
+      <div class="ss" style="color:${t.body}">${p.sub}</div>
+      <div class="go" style="color:${key==='joinup'?'#F0D080':'#6EE7B7'}">${L('استكشف الباقات ←','Explore packages →')}</div></div></div>`;
+  };
+  popBody.innerHTML = `${gateSteps(1)}<button class="back" onclick="history.back()">${t('← رجوع','← Back')}</button>
+    <div class="lead">${t('اختر كيف تريد أن تكون جزءًا من LAVENDERS:','Choose how you want to be part of LAVENDERS:')}</div>${tile('joinup')}${tile('movement')}`;
+}
+function pathView(key) {
+  const path = GATE_PATHS[key]; if (!path) return chooserView();
+  const cards = path.offers.filter(k => window.MKT_TIER !== 'franchise' || (k !== 'franchise' && k !== 'tycoon')).map(k => {
+    const o = GATE_OFFERS[k], t = GATE_THEMES[o.theme];
+    return `<div class="tile" role="button" tabindex="0" onkeydown="if(event.key==='Enter')this.click()" onclick="go('o','${k}')" style="background:${t.border}">
+      <div style="background:${t.bg}">
+        <div style="font-size:10px;letter-spacing:1.5px;color:${t.eyebrow};margin-bottom:4px">${o.eyebrow}</div>
+        <div class="tt" style="color:${t.title}">${o.icon} ${o.title}</div>
+        <div class="ss" style="color:${t.body}">${o.short}</div>
+        <div class="price" style="color:${t.eyebrow}">${priceFrom(o)}</div>
+        <div class="go" style="color:${t.eyebrow}">${L('التفاصيل ←','Details →')}</div></div></div>`;
+  }).join('');
+  popBody.innerHTML = `${gateSteps(1)}<button class="back" onclick="history.back()">${t('← رجوع','← Back')}</button>
+    <div style="font-size:19px;font-weight:900;margin-bottom:6px;text-align:right">${path.icon} ${path.title}</div>
+    <div class="sub" style="text-align:right">${path.sub}</div>${cards}`;
+}
+function offerView(key, tier) {
+  const o = GATE_OFFERS[key]; if (!o) return chooserView();
+  const t = GATE_THEMES[o.theme]; const tc = t; const tr = L;
+  const sel = o.variants.find(v => v.tier === tier) || o.variants[0];
+  const vbtns = o.variants.length > 1
+    ? '<div style="display:flex;gap:8px;margin:14px 0;flex-wrap:wrap">' + o.variants.map(v => `<button class="var" onclick="go('o','${key}','${v.tier}',true)" style="border:1px solid ${v.tier===sel.tier?t.eyebrow:'rgba(255,255,255,.15)'};color:${v.tier===sel.tier?t.title:t.body}">${v.label}<br><span style="font-size:15px">$${v.price}</span></button>`).join('') + '</div>' : '';
+  popBody.innerHTML = `${gateSteps(2)}<button class="back" onclick="history.back()">${LANG==='en'?'':'← '}${LANG==='en'?'← ':''}${GATE_PATHS[o.path].title}</button>
+    <div style="border-radius:20px;padding:2px;background:${t.border}"><div style="border-radius:18px;padding:20px;background:${t.bg};text-align:right">
+      <div style="font-size:10px;letter-spacing:1.5px;color:${t.eyebrow};margin-bottom:4px">${sel.eyebrow || o.eyebrow}</div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div style="font-size:21px;font-weight:900;color:${t.title}">${o.icon} ${o.title}</div>
+        <div style="text-align:left"><div style="font-size:26px;font-weight:900;color:${t.title}">$${sel.price}</div><div style="font-size:10px;color:${t.eyebrow}">${sel.period}</div></div>
+      </div>
+      ${vbtns}
+      ${sel.note ? `<div style="font-size:11.5px;color:${t.eyebrow};margin:4px 0">${sel.note}</div>` : ''}
+      
+      <div style="font-size:13px;color:${t.body};line-height:2;margin:12px 0 6px;white-space:pre-line">${sel.body || o.body}</div>
+      ${sel.bodyEn ? `<details style="margin:6px 0"><summary style="cursor:pointer;font-size:12px;color:${t.eyebrow}">English</summary><div dir="ltr" style="font-size:12.5px;color:${t.body};line-height:1.9;margin-top:8px;white-space:pre-line;text-align:left">${sel.bodyEn}</div></details>` : ''}
+      ${o.funding ? `<div style="margin:14px 0 4px;padding:12px;border-radius:12px;background:rgba(255,255,255,.06);font-size:12px;line-height:2;color:${t.body}"><b style="color:${tc.title}">📑 ${tr('مستندات الاعتماد','Approval documents')}</b><br><a href="roadmap.pdf" target="_blank" rel="noopener" style="color:${tc.eyebrow}">🗺️ ${tr('خارطة مقترح الشراكة والاستثمار (PDF)','Partnership and investment roadmap (PDF)')}</a><br><a href="funding.pdf" target="_blank" rel="noopener" style="color:${tc.eyebrow}">📝 ${tr('صفحة اعتماد التمويل — PDF قابل للتعبئة','Funding approval page — fillable PDF')}</a></div>` : ''}
+      ${(key==='oms'||key==='reseller'||key==='franchise') ? `<a href="builder.html" style="display:block;margin-top:14px;padding:12px;border-radius:12px;border:1px solid ${t.eyebrow};background:rgba(255,255,255,.06);color:${t.title};font-weight:800;font-size:13px;text-align:center;text-decoration:none">📱 ${L('ابنِ تطبيقك الآن — تجربة 24 ساعة','Build your app now — 24-hour trial')}<br><span style="font-weight:500;font-size:11px;opacity:.8">${L('يُنشئ النظام متجرك (ويب + أندرويد) فعلياً في حسابك، ويعمل 24 ساعة، ولا يُفتح للنشر إلا بالاشتراك','The system really creates your store (web + Android) in your account; it runs for 24 hours and unlocks for publishing only after you subscribe')}</span></a>` : ''}
+      ${DEMO_LINKS[key] ? `<a href="${DEMO_LINKS[key][0]}" style="display:block;margin-top:14px;padding:12px;border-radius:12px;border:1px dashed ${t.eyebrow};color:${t.title};font-weight:700;font-size:13px;text-align:center;text-decoration:none">👁 ${LANG==='en'?(DEMO_EN[key]||DEMO_LINKS[key][1]):DEMO_LINKS[key][1]} — ${L('ببيانات تجريبية','with sample data')}</a>` : ''}
+      <div style="margin-top:14px"><button class="btn" onclick="start('${key}','${sel.tier}')" style="background:${t.btnBg};color:${t.btnColor}">${sel.cta || o.cta}</button></div>
+      <div class="note">${L('يطلب منك تسجيل الدخول بحساب Google، ثم تكمل من نفس هذه الباقة.<br>↩︎ استرداد نقدي خلال '+REFUND_DAYS+' يومًا (3 أسابيع) وفق إجراءات الاسترداد المعتمدة.','You will be asked to sign in with a Google account, then you continue from this same package.<br>↩︎ Cash refund within '+REFUND_DAYS+' days (3 weeks) under the approved refund procedures.')}</div>
+    </div></div>`;
+}
+
+// ── تنقّل: كل خطوة في سجل المتصفح (زر الرجوع يعمل) ومحفوظة في الرابط (#p/… #o/…)
+const pop = document.getElementById('pop'), popBody = document.getElementById('popBody');
+let popOrigin = { x: '50%', y: '85%' }, popOpen = false, popTimer = null;
+function openPath(btn, key) {
+  if (btn && btn.getBoundingClientRect) { const r = btn.getBoundingClientRect(); popOrigin = { x: Math.round(r.left + r.width / 2) + 'px', y: Math.round(r.top + r.height / 2) + 'px' }; }
+  go('p', key);
+}
+function gateSteps(active) {
+  const labels = LANG === 'en' ? ['Choose', 'Details', 'Payment', 'Confirmation'] : ['اختر', 'التفاصيل', 'الدفع', 'التأكيد'];
+  return '<div style="display:flex;align-items:center;justify-content:center;gap:6px;margin:0 0 22px;direction:rtl" aria-label="' + t('خطوات الاشتراك','Subscription steps') + '">' +
+    labels.map((l, i) => {
+      const n = i + 1, on = n === active, done = n < active;
+      const dot = `<div style="width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;${on ? 'background:var(--gold);color:#04040A;' : done ? 'background:rgba(201,168,76,0.25);color:var(--gold);' : 'background:rgba(255,255,255,0.07);color:var(--text-faint);'}">${done ? '✓' : n}</div>`;
+      return `<div style="display:flex;align-items:center;gap:5px;">${dot}<span style="font-size:10.5px;${on ? 'color:#fff;font-weight:700;' : 'color:rgba(255,255,255,.3);'}">${l}</span></div>` + (n < 4 ? '<div style="width:14px;height:1px;background:rgba(255,255,255,0.12);"></div>' : '');
+    }).join('') + '</div>';
+}
+function openPaths(btn) {
+  if (btn && btn.getBoundingClientRect) { const r = btn.getBoundingClientRect(); popOrigin = { x: Math.round(r.left + r.width / 2) + 'px', y: Math.round(r.top + r.height / 2) + 'px' }; }
+  go('c');
+}
+function showPop() {
+  clearTimeout(popTimer);
+  if (!popOpen) {
+    pop.style.transformOrigin = popOrigin.x + ' ' + popOrigin.y;
+    pop.classList.add('show'); document.body.style.overflow = 'hidden'; document.body.classList.add('pop-open'); void pop.offsetWidth;
+    pop.classList.add('open'); popOpen = true;
+  }
+}
+function hidePop() {
+  if (!popOpen) return;
+  popOpen = false; clearTimeout(popTimer);
+  pop.style.transformOrigin = popOrigin.x + ' ' + popOrigin.y; pop.classList.remove('open');
+  popTimer = setTimeout(() => { pop.classList.remove('show'); document.body.style.overflow = ''; document.body.classList.remove('pop-open'); }, 380);
+}
+function render(h) {
+  const m = (h || '').replace(/^#/, '').split('/');
+  if (!m[0]) { home(); hidePop(); window.scrollTo(0, 0); return; }
+  if (!view.firstChild) home();
+  if (m[0] === 'p') pathView(m[1]); else if (m[0] === 'o') offerView(m[1], m[2]); else chooserView();
+  showPop(); pop.scrollTop = 0;
+}
+function go(kind, a, b, replace) {
+  const h = '#' + kind + '/' + a + (b ? '/' + b : '');
+  if (replace) history.replaceState(null, '', h); else history.pushState(null, '', h);
+  render(h);
+}
+window.addEventListener('popstate', () => render(location.hash));
+
+// ── الانتقال للداشبورد: تُحفَظ الباقة المختارة ليكمل منها بعد الدخول
+function start(offerKey, variantTier) {
+  try { sessionStorage.setItem('mkv2_gate_pending', JSON.stringify({ offerKey: offerKey, variantTier: variantTier })); sessionStorage.setItem('mkv2_login_prompt', '1'); sessionStorage.setItem('mkv2_sub_intent', String(Date.now())); } catch (e) {}
+  location.href = MKP.app;
+}
+function goGuest() {
+  try { sessionStorage.removeItem('mkv2_login_prompt'); } catch (e) {}
+  location.href = MKP.app;
+}
+function goLogin() {
+  try { sessionStorage.setItem('mkv2_login_prompt', '1'); } catch (e) {}
+  location.href = MKP.app;
+}
+// زر الحساب يتحول بعد الدخول إلى واجهة المستخدم حسب المكان الذي كان فيه، و«اشتراكاتي» يظهر للمشتركين الفعّالين فقط
+function goSubs() {
+  try { sessionStorage.setItem('mkv2_login_chooser', '1'); sessionStorage.setItem('mkv2_skip_restore', '1'); } catch (e) {}
+  location.href = MKP.app;
+}
+function updateAcctBtn() {
+  var g = function (k) { try { return sessionStorage.getItem(k) || ''; } catch (e) { return ''; } };
+  var tok = g('mkv2_token'), btok = g('appb_token'), b = document.getElementById('btnLogin'), sb = document.getElementById('btnSubs'), gb = document.querySelector('.login.guest');
+  if (!b) return;
+  var en = (typeof LANG !== 'undefined' && LANG === 'en');
+  if (!tok && !btok) { b.textContent = en ? 'Sign in' : 'تسجيل الدخول'; b.onclick = goLogin; if (sb) sb.style.display = 'none'; if (gb) gb.style.display = ''; return; }
+  if (gb) gb.style.display = 'none';
+  var where = g('mkv2_where');
+  if (!tok && btok && where !== 'market-builder.html') where = 'builder.html';
+  var M = { 'builder.html': ['واجهة بناء التطبيق', 'App builder'], 'market-builder.html': ['واجهة بناء السوق', 'Market builder'], 'business.html': ['بوابة بزنسك', 'My business'], 'dashboard.html': ['واجهتي', 'My dashboard'] };
+  var m = M[where] || M['dashboard.html'], target = M[where] ? where : 'dashboard.html';
+  b.textContent = en ? m[1] : m[0];
+  b.onclick = function () { try { sessionStorage.setItem('mkv2_skip_restore', '1'); } catch (e) {} location.href = (target === 'dashboard.html' ? MKP.app : (target === 'business.html' ? MKP.biz : target)); };
+  if (sb) sb.style.display = 'none';
+  if (tok && sb) {
+    fetch('https://lavndr.omssolutionorders.workers.dev?action=my_subscriptions', { headers: { Authorization: 'Bearer ' + tok } })
+      .then(function (r) { return r.json(); })
+      .then(function (j) { if (j && j.items && j.items.some(function (x) { return x.stage === 'active'; }) && g('mkv2_token')) { sb.textContent = en ? 'My subscriptions' : 'اشتراكاتي'; sb.style.display = ''; } })
+      .catch(function () {});
+  }
+}
+updateAcctBtn();
+window.addEventListener('pageshow', updateAcctBtn);
+// المسجّل دخوله لا يرى زر التجربة (التجريبي للزوار ومن لم يسجّل الدخول فقط)
+try { if (sessionStorage.getItem('mkv2_token') && sessionStorage.getItem('mkv2_email')) { var gb = document.querySelector('.login.guest'); if (gb) gb.style.display = 'none'; } } catch (e) {}
+var DEMO_EN = { fendex: 'Full Oracle preview', magma: 'Full Magma directory preview', reseller: 'Full Reseller studio preview', franchise: 'Full Franchise headquarters preview', oms: 'Full business page preview' };
+function toggleLang() {
+  var q = new URLSearchParams(location.search); q.set('lang', LANG === 'en' ? 'ar' : 'en');
+  location.href = location.pathname + '?' + q.toString() + location.hash;
+}
+(function () {
+  var l = document.getElementById('btnLang'); if (l) l.textContent = LANG === 'en' ? 'عربي' : 'EN';
+  if (LANG !== 'en') return;
+  var h1 = document.querySelector('h1.sr'); if (h1) h1.textContent = 'Lavenders — LAVNDR120: revealing consumer behaviour from the real orders of 120 businesses and brands';
+  var a = document.getElementById('btnLogin'); if (a) a.textContent = 'Sign in';
+  var g = document.getElementById('btnGuest'); if (g) g.textContent = 'Guest · Try';
+  var st = 'style="color:rgba(255,255,255,.45);text-decoration:underline"';
+  var f = document.getElementById('footLinks'); if (f) f.innerHTML = '<a href="en/about.html" ' + st + '>About</a> · <a href="en/packages.html" ' + st + '>Packages</a> · <a href="en/businesses.html" ' + st + '>For businesses</a> · <a href="en/app-builder.html" ' + st + '>App builder</a> · <a href="en/golden-certificate.html" ' + st + '>Golden certificate</a> · <a href="insights/index.html" ' + st + '>Insights</a> · <a href="embed.html" ' + st + '>Widget</a> · <a href="privacy.html" ' + st + '>Privacy policy</a>';
+  var fa = document.getElementById('footAcct'); if (fa) fa.innerHTML = 'Have an account? <a href="dashboard.html" onclick="goLogin();return false;">Sign in</a>';
+})();
+render(location.hash);
+</script>
+
+<script>/* no-copy */
+(function(){function ok(t){return t&&t.closest&&t.closest('input,textarea,[contenteditable="true"],[contenteditable=""]');}
+['copy','cut','contextmenu','selectstart','dragstart'].forEach(function(e){document.addEventListener(e,function(ev){if(!ok(ev.target))ev.preventDefault();},true);});})();
+</script>
+
+</body>
+</html>
